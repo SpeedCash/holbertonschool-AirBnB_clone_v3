@@ -155,7 +155,7 @@ No known bugs at this time.
 
 ## Authors
 
-- [@Philippe MARCLAY](https://github.com/NicolasLearn)
+- [@Nicloas QUOIREZ](https://github.com/NicolasLearn)
 - [@Thierry CRAVERO](https://github.com/SpeedCash)
 
 Second part of Airbnb: Joann Vuong

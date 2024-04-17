@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """ This module defines an API. """
 from api.v1.views import app_views
-from flask import Flask
+from flask import Flask, jsonify, make_response
 import os
 from models import storage
 
@@ -13,6 +13,12 @@ app.register_blueprint(app_views)
 def close_session(self):
     """Remove the current SQLAlchemy session."""
     storage.close()
+
+
+@app.errorhandler(404)
+def not_found(self):
+    """404 not found"""
+    return make_response(jsonify({"error": "Not found"}), 404)
 
 
 if __name__ == "__main__":

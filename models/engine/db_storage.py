@@ -14,14 +14,15 @@ from models.user import User
 from os import getenv
 import sqlalchemy
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker, Session
+from sqlalchemy.exc import SQLAlchemyError
 
 classes = {"Amenity": Amenity, "City": City,
            "Place": Place, "Review": Review, "State": State, "User": User}
 
 
 class DBStorage:
-    """interacts with the MySQL database"""
+    """interaacts with the MySQL database"""
     __engine = None
     __session = None
 
@@ -32,11 +33,11 @@ class DBStorage:
         HBNB_MYSQL_HOST = getenv('HBNB_MYSQL_HOST')
         HBNB_MYSQL_DB = getenv('HBNB_MYSQL_DB')
         HBNB_ENV = getenv('HBNB_ENV')
-        self.__engine = create_engine(
-            'mysql+mysqldb://{}:{}@{}/{}'.format(
-                HBNB_MYSQL_USER, HBNB_MYSQL_PWD, HBNB_MYSQL_HOST, HBNB_MYSQL_DB
-            ), pool_pre_ping=True
-        )
+        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'.
+                                      format(HBNB_MYSQL_USER,
+                                             HBNB_MYSQL_PWD,
+                                             HBNB_MYSQL_HOST,
+                                             HBNB_MYSQL_DB))
         if HBNB_ENV == "test":
             Base.metadata.drop_all(self.__engine)
 
@@ -76,13 +77,25 @@ class DBStorage:
         self.__session.remove()
 
     def get(self, cls, id):
-        """Retrieve one object by class and id"""
-        if cls and id:
-            return self.__session.query(cls).filter(cls.id == id).one_or_none()
-        return None
+        """Return object based on the class and id"""
+        if cls not in classes.values():
+            return None
+        try:
+            result = self.__session.query(cls).filter_by(id=id).one_or_none()
+            return result
+        except SQLAlchemyError as e:
+            print("Error :", str(e))
+            return None
 
     def count(self, cls=None):
-        """Count number of objects in storage, optionally filtered by class"""
-        if cls:
-            return self.__session.query(cls).count()
-        return self.__session.query(BaseModel).count()
+        try:
+            if cls and cls in classes.values():
+                return self.__session.query(cls).count()
+            else:
+                count = 0
+                for model_cls in classes.values():
+                    count += self.__session.query(model_cls).count()
+                return count
+        except SQLAlchemyError as e:
+            print("Error counting objects:", str(e))
+            return None

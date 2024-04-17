@@ -19,27 +19,29 @@ classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
 class FileStorage:
     """serializes instances to a JSON file & deserializes back to instances"""
 
-    __file_path = "file.json"  # path to the JSON file
-    __objects = {}  # stores all objects by <class name>.id
+    # string - path to the JSON file
+    __file_path = "file.json"
+    # dictionary - empty but will store all objects by <class name>.id
+    __objects = {}
 
     def all(self, cls=None):
-        """Returns the dictionary __objects filtered by class if provided."""
+        """returns the dictionary __objects"""
         if cls is not None:
             new_dict = {}
             for key, value in self.__objects.items():
-                if isinstance(value, cls) or value.__class__.__name__ == cls:
+                if cls == value.__class__ or cls == value.__class__.__name__:
                     new_dict[key] = value
             return new_dict
         return self.__objects
 
     def new(self, obj):
-        """Sets in __objects the obj with key <obj class name>.id"""
+        """sets in __objects the obj with key <obj class name>.id"""
         if obj is not None:
             key = obj.__class__.__name__ + "." + obj.id
             self.__objects[key] = obj
 
     def save(self):
-        """Serializes __objects to the JSON file (path: __file_path)"""
+        """serializes __objects to the JSON file (path: __file_path)"""
         json_objects = {}
         for key in self.__objects:
             json_objects[key] = self.__objects[key].to_dict()
@@ -47,36 +49,41 @@ class FileStorage:
             json.dump(json_objects, f)
 
     def reload(self):
-        """Deserializes the JSON file to __objects"""
+        """deserializes the JSON file to __objects"""
         try:
             with open(self.__file_path, 'r') as f:
                 jo = json.load(f)
             for key in jo:
                 self.__objects[key] = classes[jo[key]["__class__"]](**jo[key])
-        except FileNotFoundError:
-            pass
-        except json.JSONDecodeError:
+        except Exception:
             pass
 
     def delete(self, obj=None):
-        """Delete obj from __objects if it’s inside"""
+        """delete obj from __objects if it’s inside"""
         if obj is not None:
             key = obj.__class__.__name__ + '.' + obj.id
             if key in self.__objects:
                 del self.__objects[key]
 
     def close(self):
-        """Call reload() method for deserializing the JSON file to objects"""
+        """call reload() method for deserializing the JSON file to objects"""
         self.reload()
 
     def get(self, cls, id):
-        """Retrieve one object by class and id."""
+        """retrieve an object using its id"""
         key = f"{cls.__name__}.{id}"
-        return self.__objects.get(key, None)
+        if key in FileStorage.__objects:
+            return FileStorage.__objects[key]
+        else:
+            return None
 
     def count(self, cls=None):
-        """Count number of objects in storage, optionally filtered by class."""
-        if cls:
-            return len({k: v for k, v in self.__objects.items()
-                        if isinstance(v, cls)})
-        return len(self.__objects)
+        """count the number of objects of the storage"""
+        total_isinstance = 0
+        if cls is not None:
+            for obj in FileStorage.__objects.values():
+                if isinstance(obj, cls):
+                    total_isinstance += 1
+        else:
+            return len(FileStorage.__objects)
+        return total_isinstance

@@ -52,9 +52,39 @@ def delete_state_by_id(state_id):
 
 @app_views.route('/states', methods=['POST'], strict_slashes=False)
 def creates_state():
-    pass
+    """ Create instance of state. """
+    # Get JSON data of the body request sent by POST.
+    req_json = request.get_json()
+    # Check if Data is not none and had name.
+    if not request.get_json():
+        return make_response(jsonify({"error": "Not a JSON"}), 400)
+    if "name" not in request.get_json():
+        return make_response(jsonify({"error": "Missing name"}), 400)
+    new_state = State()
+    # Loops to set each key:value to the new state.
+    for (key, value) in req_json.items():
+        setattr(new_state, key, value)
+    # Save Data.
+    storage.new(new_state)
+    storage.save()
+    return make_response(jsonify(new_state.to_dict()), 201)
+    
 
 
 @app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
 def update_state(state_id):
-    pass
+    """ Modify instance of state if exist, else raise 404. """
+    target_state = storage.get(State, state_id)
+    # Check if object exist.
+    if target_state is None:
+        return make_response(jsonify({"error": "Not found"}), 404)
+    body_json = request.get_json()
+    if body_json is None:
+        return make_response(jsonify({"error": "Not a JSON"}), 400)
+    # Loops to update each key:value to the state.
+    for (key, value) in body_json.items():
+        setattr(target_state, key, value)
+    # Save Data
+    target_state.save()
+    return make_response(jsonify(target_state.to_dict()), 200)
+    

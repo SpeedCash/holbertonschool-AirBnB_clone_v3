@@ -52,8 +52,8 @@ def delete_state(state_id):
     # Supprimer l'objet State de la base de données
     storage.delete(state)
     storage.save()
-
-    return make_response(jsonify({}), 200) # retourne un dictionnaire vide et un code 200
+    # retourne un dictionnaire vide et un code 200
+    return make_response(jsonify({}), 200)
 
 
 @app_views.route('/states', methods=['POST'], strict_slashes=False)
@@ -88,8 +88,8 @@ def update_state(state_id):
         return make_response(jsonify({"error": "Not a JSON"}), 400)
     # Loops to update each key:value to the state.
     for (key, value) in body_json.items():
-        setattr(target_state, key, value)
+        if key not in ['id', 'created_at', 'updated_at']:
+            setattr(target_state, key, value)
     # Save Data
     target_state.save()
     return make_response(jsonify(target_state.to_dict()), 200)
-    

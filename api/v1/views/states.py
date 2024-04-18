@@ -20,34 +20,40 @@ from flask import jsonify, abort, make_response, request
 from models import storage
 from models.state import State
 
-@app_views.route("/states/", methods=['GET'])
-def all_states():
-    """ Return all instance of States. """
-    all_states = storage.all(State)
-    dict_states = list()
-    for value in all_states.values():
-        dict_states.append(value.to_dict())
-    return jsonify(dict_states)
+
+@app_views.route('/states', methods=['GET'], strict_slashes=False)
+def states():
+    """Retrieve a list of all State objects"""
+    states = storage.all(State)  # recupère tous les objets de type State
+    state_list = []  # cree une liste vide
+    for state in states.values():
+        # convertie en dictionnaire qui est ajouté a la liste
+        state_list.append(state.to_dict())
+    return jsonify(state_list)  # return la list convertie en dictionnaire json
 
 
-@app_views.route("/states/<state_id>", methods=['GET'])
-def show_state_by_id(state_id):
-    """ Return the instance of State if exist or 404. """
-    state_to_show = storage.get(State, state_id)
-    if state_to_show:
-        return jsonify(state_to_show.to_dict())
-    abort(404)
+@app_views.route('/states/<state_id>', methods=['GET'], strict_slashes=False)
+def get_states(state_id):
+    """Retrieve a State object by ID"""
+    state = storage.get(State, state_id)
+    if state is None:
+        abort(404)  # Abandonne la requête avec une erreur 404
+    return jsonify(state.to_dict())
 
 
-@app_views.route("/states/<state_id>", methods=['DELETE'])
-def delete_state_by_id(state_id):
-    """ Delete instance of state if exist, else raise 404. """
-    state_to_delete = storage.get(State, state_id)
-    if state_to_delete:
-        storage.delete(state_to_delete)
-        storage.save()
-        return make_response(jsonify({}), 200)
-    abort(404)
+@app_views.route('/states/<state_id>', methods=['DELETE'],
+                 strict_slashes=False)
+def delete_state(state_id):
+    """Delete a State object by ID"""
+    state = storage.get(State, state_id)
+    if state is None:
+        abort(404)
+
+    # Supprimer l'objet State de la base de données
+    storage.delete(state)
+    storage.save()
+
+    return make_response(jsonify({}), 200) # retourne un dictionnaire vide et un code 200
 
 
 @app_views.route('/states', methods=['POST'], strict_slashes=False)
@@ -68,7 +74,6 @@ def creates_state():
     storage.new(new_state)
     storage.save()
     return make_response(jsonify(new_state.to_dict()), 201)
-    
 
 
 @app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)

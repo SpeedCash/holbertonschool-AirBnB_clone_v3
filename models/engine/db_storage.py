@@ -80,12 +80,10 @@ class DBStorage:
         """Return object based on the class and id"""
         if cls not in classes.values():
             return None
-        try:
-            result = self.__session.query(cls).filter_by(id=id).one_or_none()
-            return result
-        except SQLAlchemyError as e:
-            print("Error :", str(e))
-            return None
+        all_cls = models.storage.all(cls)
+        for value in all_cls.values():
+            if value.id == id:
+                return value
 
     def count(self, cls=None):
         """count the number of objects of the storage"""

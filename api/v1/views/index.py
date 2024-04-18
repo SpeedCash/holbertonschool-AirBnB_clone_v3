@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-""" This module defines the routes for API.
+""" This module defines the API routes to index.
 
 Routes:
     /status: Return JSON status --> 'OK'.
@@ -7,13 +7,6 @@ Routes:
 """
 from api.v1.views import app_views
 from flask import jsonify
-from models import storage
-from models.amenity import Amenity
-from models.city import City
-from models.place import Place
-from models.user import User
-from models.review import Review
-from models.state import State
 
 
 @app_views.route("/status", methods=['GET'], strict_slashes=False)
@@ -25,6 +18,13 @@ def status():
 @app_views.route("/stats")
 def stats():
     """ Endpoint that return a list of the number of each objects by type """
+    from models import storage
+    from models.amenity import Amenity
+    from models.city import City
+    from models.place import Place
+    from models.user import User
+    from models.review import Review
+    from models.state import State
     objs = {
         "amenities": storage.count(Amenity),
         "cities": storage.count(City),

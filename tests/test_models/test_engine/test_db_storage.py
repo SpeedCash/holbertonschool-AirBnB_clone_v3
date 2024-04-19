@@ -6,7 +6,7 @@ Contains the TestDBStorageDocs and TestDBStorage classes
 from datetime import datetime
 import inspect
 import models
-from models.engine import db_storage
+from models.engine import db_storage, file_storage
 from models.amenity import Amenity
 from models.base_model import BaseModel
 from models.city import City
@@ -68,8 +68,8 @@ test_db_storage.py'])
                             "{:s} method needs a docstring".format(func[0]))
 
 
-class TestFileStorage(unittest.TestCase):
-    """Test the FileStorage class"""
+class Testfile_storage(unittest.TestCase):
+    """Test the file_storage class"""
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_returns_dict(self):
         """Test that all returns a dictionaty"""
@@ -86,3 +86,27 @@ class TestFileStorage(unittest.TestCase):
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get(self):
+        storage = file_storage()
+        dic = {'name': 'Apartment'}
+        instance = State(**dic)
+        storage.new(instance)
+        storage.save()
+        storage = file_storage()
+        get_inst = storage.get(State, instance.id)
+        self.assertEqual(get_inst, instance)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count(self):
+        storage = file_storage()
+        dic = {'name': 'Apartment'}
+        state = State(**dic)
+        storage.new(state)
+        dic = {'name': 'Florida'}
+        city = City(**dic)
+        storage.new(city)
+        storage.save()
+        count_inst = storage.count()
+        self.assertEqual(len(storage.all()), count_inst)
